@@ -1,18 +1,20 @@
+from typing import List
 from owlready2 import Ontology, And, GeneralClassAxiom, ObjectProperty, Thing, sync_reasoner, get_ontology
 import owlready2
-from src.dataclass import *
+from src.dataclass import Right, Left
 import types
 owlready2.JAVA_EXE = "C:\\Users\\marti\\.jdks\\openjdk-17.0.2\\bin\\java.exe"
 
+from src.protocols import Consept, InclutionAxiom, Role, Expression
 
 class OwlEngine:
-    
     def __init__(self, ontology: Ontology):
         self.ontology = ontology
+        self.ontology_list: List[InclutionAxiom] = []
     
     def entails(self, axiom: Right | Left) -> bool:
         if isinstance(axiom, Right):    
-            temp_class = Class("TempClass")
+            temp_class = Consept("TempClass")
             
             self.addAxiom(Left(axiom.right, temp_class))
             
@@ -27,7 +29,7 @@ class OwlEngine:
             
             return entailes
         else:
-            temp_class = Class("TempClass")
+            temp_class = Consept("TempClass")
             
             self.addAxiom(Right(temp_class,axiom.left))
             
@@ -41,11 +43,6 @@ class OwlEngine:
                 owlready2.destroy_entity(self.ontology[temp_class.name])
             
             return entailes
-            
-        return False
-        
-        
-        
     
     def addAxiom(self, axiom: Right | Left):
         if isinstance(axiom, Left):
@@ -59,8 +56,12 @@ class OwlEngine:
             c = self._val_convert(axiom.left)
             with self.ontology:
                 c.is_a.append(ax)
+        self.ontology_list.append(axiom.inclutionAxiom())
     
-    def _node_convert(self, node: Node):
+    def getHypothisis(self) -> List[InclutionAxiom]:
+        return self.ontology_list
+    
+    def _node_convert(self, node: Expression):
         if len(node.inf) == 0:
             return Thing
         elif len(node.inf) == 1:
@@ -69,9 +70,9 @@ class OwlEngine:
             return And(self._val_convert(n) for n in node.inf)
             
     
-    def _val_convert(self, rc: Relation | Class):
+    def _val_convert(self, rc: Role | Consept):
         with self.ontology:
-            if isinstance(rc, Class):
+            if isinstance(rc, Consept):
                 c = self.ontology[rc.name]
                 if c == None:
                     c = types.new_class(rc.name, (Thing, ))
@@ -80,4 +81,4 @@ class OwlEngine:
                 c = self.ontology[rc.name]
                 if c == None:
                     c = types.new_class(rc.name, (ObjectProperty, ))
-                return c.some(self._node_convert(rc.node))
+                return c.some(self._node_convert(rc.expression))

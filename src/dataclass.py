@@ -3,51 +3,38 @@ from typing import List
 
 from dataclasses import dataclass
 
-
-@dataclass
-class Node:
-    inf: List[Class | Relation]
-    
-    def __iter__(self):
-        self._iter_queue: List[Node] = [self]
-        return self
-    
-    def __next__(self) -> Node:
-        if self._iter_queue == None or len(self._iter_queue) == 0:
-            raise StopIteration
-        
-        n = self._iter_queue.pop(0)
-        
-        self._iter_queue.extend(r.node for r in n.inf if isinstance(r, Relation))
-        return n
-        
-
-@dataclass
-class Class:
-    name: str
-
-@dataclass
-class Relation:
-    name: str
-    node: Node
-
-@dataclass
-class Axiom:
-    left: Node
-    right: Node
+from src.protocols import Consept, Expression, InclutionAxiom
 
 @dataclass
 class Right:
-    left: Class
-    right: Node
+    """A incluton consisting of a left Consept and right Expression. This is know as a EL_lhs
     
-    def node(self):
-        return Axiom(Node([self.left]), self.right)
+    Consept ⊑ Expression
+    """
+    left: Consept
+    right: Expression
+    
+    def inclutionAxiom(self) -> InclutionAxiom:
+        """Converts the left inclution into a general inclution
+
+        Returns:
+            InclutionAxiom: Axiom as an inclution
+        """
+        return InclutionAxiom(Expression([self.left]), self.right)
 
 @dataclass
 class Left:
-    left: Node
-    right: Class
+    """A incluton consisting of a left Expression and right Consept. This is know as a EL_rhs
     
-    def node(self):
-        return Axiom(self.left, Node([self.right]))
+    Expression ⊑ Consept
+    """
+    left: Expression
+    right: Consept
+    
+    def inclutionAxiom(self) -> InclutionAxiom:
+        """Converts the left inclution into a general inclution
+
+        Returns:
+            InclutionAxiom: Axiom as an inclution
+        """
+        return InclutionAxiom(self.left, Expression([self.right]))

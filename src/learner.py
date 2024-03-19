@@ -1,39 +1,26 @@
-from functools import singledispatch
-
-from typing import List
+from dataclass import *
+from protocols import Teacher
 from typing import Protocol
 
-from dataclass import *
-    
-class Teacher(Protocol):
-    def membershipQuery(self, axiom):
-        ...
-    
-    def equivalenceQuery(self, axioms) -> Axiom | None:
-        ...
-    
-    def getClasses(self) -> List[Class]:
-        ...
-    
-
 class Engine(Protocol):
-    def entails(self, axiom: Axiom) -> bool:
+    """The engine is what the Learner uses to do operations on its hypothosis ontology.
+    """
+    def entails(self, axiom: InclutionAxiom) -> bool:
         ...
     
-    def addAxiom(self, axiom: Axiom):
+    def addAxiom(self, axiom: InclutionAxiom):
         ...
     
-    def getHypothisis(self) -> List[Axiom]:
+    def getHypothisis(self) -> List[InclutionAxiom]:
         ...
 
 class Learner:
     
-    def __init__(self, engine: Engine, oracle: Teacher, hypothis: List = []):
+    def __init__(self, engine: Engine, oracle: Teacher):
         self.engine = engine
         self.oracle = oracle
-        self.hypothis = hypothis
         
-    def termenologiCounterExample(self, counterExample: Axiom) -> Right | Left:
+    def termenologiCounterExample(self, counterExample: InclutionAxiom) -> Right | Left:
         """
         if len(counterExample.left.inf) == 1 and isinstance(counterExample.left.inf[0], Class):
             return Left(counterExample.left.inf[0], counterExample.right)
@@ -42,13 +29,13 @@ class Learner:
             return Right(counterExample.right, counterExample.right.inf[0])
         """
         for n in counterExample.left:
-            for c in self.oracle.getClasses():
+            for c in self.oracle.getConsepts():
                 r = Left(n,c)
                 if (self.isCounterExample(r)):
                     return r
         
         for n in counterExample.right:
-            for c in self.oracle.getClasses():
+            for c in self.oracle.getConsepts():
                 l = Right(c,n)
                 if (self.isCounterExample(r)):
                     return l
@@ -57,16 +44,17 @@ class Learner:
             
         
     def isCounterExample(self, axiom: Right | Left):
-        return (not self.engine.entails(axiom.node())) and (self.oracle.membershipQuery(axiom.node()))
+        return (not self.engine.entails(axiom.inclutionAxiom())) and (self.oracle.membershipQuery(axiom.inclutionAxiom()))
     
-    def runLearner(self):
+    def runLearner(self) -> List[InclutionAxiom]:
         while True:
-            counterExample = self.oracle.equivalenceQuery(self.hypothis)
+            hypothisis = self.engine.getHypothisis()
+            counterExample = self.oracle.equivalenceQuery(hypothisis)
             if (counterExample == None):
-                return self.hypothis
+                return hypothisis
             
             counterExample = self.termenologiCounterExample(counterExample)
-            
+            """
             counterExample = self.computeEssentialCounterexample(counterExample)
         
     @singledispatch    
@@ -80,3 +68,4 @@ class Learner:
     @computeEssentialCounterexample.register
     def _(self, counterExample: Left):
         print("using left")
+"""
