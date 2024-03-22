@@ -21,11 +21,11 @@ class LearnerImpl:
         
     def run_learner(self) -> List[InclutionAxiom]:
         while True:
-            counter_example = self.teacher.equivalence_query(self.get_hypothis())
+            counter_example = self.teacher.equivalence_query(self._get_hypothis())
             if (counter_example == None):
                 break
             
-            counter_example = self.termenologi_counter_example(counter_example)
+            counter_example = self._termenologi_counter_example(counter_example)
             
             if isinstance(counter_example, Right):
                 counter_example = self.right_o_essensial(counter_example)
@@ -33,12 +33,12 @@ class LearnerImpl:
                 counter_example = self.left_o_essensial(counter_example)
             
             self.engine.add_axiom(counter_example)
-        return self.get_hypothis()
+        return self._get_hypothis()
     
-    def get_hypothis(self) -> List[InclutionAxiom]:
+    def _get_hypothis(self) -> List[InclutionAxiom]:
         return [a.inclution_axiom() for a in self.engine.get_hypothisis()]
      
-    def termenologi_counter_example(self, counter_example: InclutionAxiom) -> Left | Right:
+    def _termenologi_counter_example(self, counter_example: InclutionAxiom) -> Left | Right:
         
         if len(counter_example.right.inf) == 1 and isinstance(counter_example.right.inf[0], Consept):
             return Right(counter_example.right, counter_example.right.inf[0])
@@ -49,18 +49,18 @@ class LearnerImpl:
         for n in counter_example.left:
             for c in self.teacher.get_consepts():
                 r = Right(n,c)
-                if (self.is_counter_example(r)):
+                if (self._is_counter_example(r)):
                     return r
         
         for n in counter_example.right:
             for c in self.teacher.get_consepts():
                 l = Left(c,n)
-                if (self.is_counter_example(r)):
+                if (self._is_counter_example(r)):
                     return l
         raise
             
         
-    def is_counter_example(self, axiom: Left | Right) -> bool:
+    def _is_counter_example(self, axiom: Left | Right) -> bool:
         return (not self.engine.entails(axiom)) and (self.teacher.membership_query(axiom.inclution_axiom()))
     
     

@@ -26,20 +26,28 @@ def test_is_counter_example():
     teacher_engine.add_axiom(axiom)
     
     # ∃.eats.⊤ ⊑ Mother
-    assert learner.is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Mother")))
+    assert learner._is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Mother")))
     # ∃.eats.Peron ⊑ Mother
-    assert learner.is_counter_example(Right(Expression([Role("eats", Expression([Consept("Person")]))]), Consept("Mother")))
+    assert learner._is_counter_example(Right(Expression([Role("eats", Expression([Consept("Person")]))]), Consept("Mother")))
     # not ∃.eats.Peron ⊑ Person
-    assert not learner.is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Person")))
+    assert not learner._is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Person")))
     
     # Mother ⊑ Person
     axiom = Left(Consept("Mother"), Expression([Consept("Person")]))
     teacher_engine.add_axiom(axiom)
 
     # Mother ⊑ Person
-    assert learner.is_counter_example(Right(Expression([Consept("Mother")]), Consept("Person")))
+    assert learner._is_counter_example(Right(Expression([Consept("Mother")]), Consept("Person")))
     # ∃.eats.Peron ⊑ Person
-    assert learner.is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Person")))
-
+    assert learner._is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Person")))
+    
+    # ∃.eats.⊤ ⊑ Person
+    axiom = Right(Expression([Role("eats", Expression([]))]), Consept("Mother"))
+    engine.add_axiom(axiom)
+    
+    # not ∃.eats.⊤ ⊑ Mother
+    assert not learner._is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Mother")))
+    # ∃.eats.Peron ⊑ Person
+    assert learner._is_counter_example(Right(Expression([Role("eats", Expression([]))]), Consept("Person")))
     
     onto.destroy()
