@@ -14,7 +14,7 @@ class Learner(Protocol):
 class Teacher(Protocol):
     """The teacher is who the learner askes questions to in order to learn the ontology
     """
-    def membershipQuery(self, axiom: InclutionAxiom) -> bool:
+    def membership_query(self, axiom: InclutionAxiom) -> bool:
         """Checks if an axiom is the member of the target ontology
 
         Args:
@@ -25,7 +25,7 @@ class Teacher(Protocol):
         """
         ...
     
-    def equivalenceQuery(self, axioms: List[InclutionAxiom]) -> InclutionAxiom | None:
+    def equivalence_query(self, axioms: List[InclutionAxiom]) -> InclutionAxiom | None:
         """Checks if an hypothesis ontology is equivalent with the target ontology. It gives
         an counter example if it is not true.
 
@@ -38,7 +38,7 @@ class Teacher(Protocol):
         """
         ...
     
-    def getConsepts(self) -> List[Consept]:
+    def get_consepts(self) -> List[Consept]:
         """The learner is responsible to know what Consepts and Roles the ontology consists of.
 
         Returns:

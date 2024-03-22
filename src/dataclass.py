@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from src.protocols import Consept, Expression, InclutionAxiom
 
 @dataclass
-class Right:
+class Left:
     """A incluton consisting of a left Consept and right Expression. This is know as a EL_lhs
     
     Consept ⊑ Expression
@@ -14,7 +14,7 @@ class Right:
     left: Consept
     right: Expression
     
-    def inclutionAxiom(self) -> InclutionAxiom:
+    def inclution_axiom(self) -> InclutionAxiom:
         """Converts the left inclution into a general inclution
 
         Returns:
@@ -23,7 +23,7 @@ class Right:
         return InclutionAxiom(Expression([self.left]), self.right)
 
 @dataclass
-class Left:
+class Right:
     """A incluton consisting of a left Expression and right Consept. This is know as a EL_rhs
     
     Expression ⊑ Consept
@@ -31,7 +31,7 @@ class Left:
     left: Expression
     right: Consept
     
-    def inclutionAxiom(self) -> InclutionAxiom:
+    def inclution_axiom(self) -> InclutionAxiom:
         """Converts the left inclution into a general inclution
 
         Returns:
