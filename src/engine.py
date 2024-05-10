@@ -50,7 +50,7 @@ class OwlEngine:
             owlready2.destroy_entity(self.ontology[temp_class.name])
         return entailes
     
-    def add_axiom(self, axiom: Right | Left):
+    def add_axiom(self, axiom: Right | Left ):
         if isinstance(axiom, Left):
             if len(axiom.left.consepts) == 1 and len(axiom.left.roles) == 0:
                 axiom = Right(axiom.left.consepts[0], Expression([axiom.right],[]))
@@ -65,8 +65,7 @@ class OwlEngine:
             c = self._consept_convert(axiom.left)
             with self.ontology:
                 c.is_a.append(ax)
-        self.ontology_list.append(axiom)
-    
+        
     def get_hypothisis(self) -> List[Right | Left]:
         return self.ontology_list
     

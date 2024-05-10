@@ -72,21 +72,28 @@ class Expression:
     roles: List[Role]
     
     def __iter__(self):
-        self._iter_queue: List[Expression] = []
-        self._current_node: Expression = self
+        return ExpressionIterator(self)
+
+class ExpressionIterator:
+    def __init__(self, root_expression: Expression):
+        self.iter_queue = [root_expression]
+        self.current_node = None
+
+    def __iter__(self):
         return self
-    
-    def __next__(self) -> Expression:    
-        if self._iter_queue == None:
+
+    def __next__(self):
+        if self.iter_queue == None:
             raise StopIteration
         
-        self._iter_queue.extend(r.expression for r in self._current_node.roles)
+        if self.current_node != None:
+            self.iter_queue.extend(r.expression for r in self.current_node.roles)
         
-        if len(self._iter_queue) == 0:
+        if len(self.iter_queue) == 0:
             raise StopIteration
         
-        self._current_node = self._iter_queue.pop(0)
-        return self._current_node
+        self.current_node = self.iter_queue.pop(0)
+        return self.current_node
 
 @dataclass(eq=True, frozen=True)
 class Consept:

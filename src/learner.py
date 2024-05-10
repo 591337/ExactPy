@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.dataclass import Right, Left
-from src.protocols import Teacher, InclutionAxiom, Expression, Consept
+from src.protocols import Teacher, InclutionAxiom, Expression, Consept, Role
 from typing import Protocol, List
 import copy
 
@@ -120,7 +120,7 @@ class LearnerImpl:
                     
                     if self.teacher.membership_query(a.inclution_axiom()):
                         if self.engine.entails(a):
-                            n.roles.pop(i) # TODO: This does not work for some reason. It is a different object.
+                            n.roles.pop(i)
                         else:
                             return self.decompose_right(a)
             
@@ -154,5 +154,40 @@ class LearnerImpl:
             root = False
         
         return left
+    
+    def sibling_merge(self, axiom: Right) -> Right:
+        exp = axiom.right
         
-      
+        for n in exp:
+            roles = n.roles
+            for i in range(len(roles)-2,-1,-1):
+                for j in range(len(roles)-1,i,-1):
+                    if (roles[i].name != roles[j].name):
+                        continue
+                    new_roles = roles.copy()
+                    new_role = Role(roles[i].name, self.expression_merge(roles[i].expression, roles[j].expression))
+                    new_roles.pop(j)
+                    new_roles[i] = new_role
+                    
+                    n.roles = new_roles
+                    
+                    if self.teacher.membership_query(axiom.inclution_axiom()):
+                        roles = new_roles
+                    else:
+                        n.roles = roles
+                    
+        return axiom
+                    
+
+    def expression_merge(self, exp1: Expression, exp2: Expression) -> Expression:
+        consepts = exp1.consepts.copy()
+        for c in exp2.consepts:
+            if c not in consepts:
+                consepts.append(c)
+        
+        roles = exp1.roles.copy()
+        roles.extend(exp2.roles)
+        
+        return Expression(consepts, roles)
+        
+        

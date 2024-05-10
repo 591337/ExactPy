@@ -4,19 +4,21 @@ from src.__test__.expression_parser import expr
 from src.protocols import Expression
 
 def test_iteratior():
-    e = expr("1", {"2": ["2"]}, {"3": ["3"]})
+    exp = expr("1", {"2": ["2"]}, {"3": ["3"]})
     
-    exp = iter(e)
+    it = iter(exp)
     
-    assert exp is e
+    e = next(it)
     
-    assert isinstance(exp, Expression)
-    assert exp.consepts[0].name == "1"
+    assert e is exp
+    
+    assert isinstance(e, Expression)
+    assert e.consepts[0].name == "1"
         
-    assert exp.roles.pop(0).name == "2"
+    assert e.roles.pop(0).name == "2"
     
-    exp = next(exp)
+    e = next(it)
     
-    assert exp is e.roles[0].expression
+    assert e is exp.roles[0].expression
     
-    assert exp.consepts[0].name == "3"
+    assert e.consepts[0].name == "3"

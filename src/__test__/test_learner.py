@@ -107,7 +107,6 @@ def test_right_decompesision():
     teacher_engine.add_axiom(axiom)
     
     counter_example = Right(Consept("Woman"), expr("Human", {"hasParent": ["Human", {"hasParent": ["Human"]}]}))
-    
     axiom = learner.decompose_right(counter_example)
         
     assert isinstance(axiom, Right)
@@ -130,6 +129,7 @@ def test_right_decompesision():
     
     engine.add_axiom(axiom)
     
+    counter_example = Right(Consept("Woman"), expr("Human", {"hasParent": ["Human", {"hasParent": ["Human"]}]}))
     axiom = learner.decompose_right(counter_example)
     
     assert isinstance(axiom, Right)
