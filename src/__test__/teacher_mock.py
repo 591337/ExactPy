@@ -1,10 +1,9 @@
+from typing import List
 import pytest
-import owlready2
 
-from src.dataclass import Left, Right
-from src.engine import OwlEngine
+from src.dataclass import Right, Left
 from src.learner import Engine
-from src.protocols import *
+from src.protocols import Consept, InclutionAxiom
 
 class TestTeacher:
     def __init__(self, engine: Engine, consepts: List[Consept]):
@@ -12,13 +11,13 @@ class TestTeacher:
         self.consepts = consepts
     
     def membership_query(self, axiom: InclutionAxiom) -> bool:
-        if len(axiom.left.inf) == 1 and isinstance(axiom.left.inf[0], Consept):
-            return self.engine.entails(Left(axiom.left.inf[0], axiom.right))
+        if len(axiom.left.consepts) == 1 and len(axiom.left.roles) == 0:
+            return self.engine.entails(Right(axiom.left.consepts[0], axiom.right))
         
-        if len(axiom.right.inf) == 1 and isinstance(axiom.right.inf[0], Consept):
-            return self.engine.entails(Right(axiom.left, axiom.right.inf[0]))
+        if len(axiom.right.consepts) == 1 and len(axiom.right.roles) == 0:
+            return self.engine.entails(Left(axiom.left, axiom.right.consepts[0]))
         
-        raise
+        raise ValueError()
     
     def equivalence_query(self, axioms: List[InclutionAxiom]) -> InclutionAxiom | None:
         ...

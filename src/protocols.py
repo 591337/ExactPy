@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Protocol
+from typing import Protocol, Set
 from typing import List
 
 from dataclasses import dataclass
@@ -68,22 +68,27 @@ class Expression:
     
     example: element ⊓ element ⊓ element (where element are different Consepts and Roles)
     """
-    inf: List[Consept | Role]
+    consepts: List[Consept]
+    roles: List[Role]
     
     def __iter__(self):
-        self._iter_queue: List[Expression] = [self]
+        self._iter_queue: List[Expression] = []
+        self._current_node: Expression = self
         return self
     
-    def __next__(self) -> Expression:
-        if self._iter_queue == None or len(self._iter_queue) == 0:
+    def __next__(self) -> Expression:    
+        if self._iter_queue == None:
             raise StopIteration
         
-        n = self._iter_queue.pop(0)
+        self._iter_queue.extend(r.expression for r in self._current_node.roles)
         
-        self._iter_queue.extend(r.expression for r in n.inf if isinstance(r, Role))
-        return n
+        if len(self._iter_queue) == 0:
+            raise StopIteration
+        
+        self._current_node = self._iter_queue.pop(0)
+        return self._current_node
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Consept:
     """A consept atomic and contains only a name
     

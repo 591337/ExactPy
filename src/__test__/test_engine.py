@@ -1,10 +1,11 @@
 import pytest
 import owlready2
 
-from src.dataclass import Left, Right
+from src.__test__.expression_parser import expr
+from src.dataclass import Right, Left
 from src.engine import OwlEngine
 
-from src.protocols import *
+from src.protocols import Consept
 
 def test_add_right_axiom_with_left_consept():
     onto = owlready2.get_ontology("http://test.org/onto.owl")
@@ -12,13 +13,13 @@ def test_add_right_axiom_with_left_consept():
     engine = OwlEngine(onto)
     
     # Mother ⊑ Parent
-    axiom = Right(Expression([Consept("Mother")]), Consept("Parent"))
+    axiom = Left(expr("Mother"), Consept("Parent"))
     engine.add_axiom(axiom)
     
     left_axioms = list(onto.general_class_axioms())
     left_axioms.extend(onto.classes())
     
-    assert len(left_axioms) is 2
+    assert len(left_axioms) == 2
 
 def test_add_simple_right_axiom():
     """Testing adding a simple left axiom (EL_lhs) to an empty ontology
@@ -27,13 +28,13 @@ def test_add_simple_right_axiom():
     engine = OwlEngine(onto)
     
     # ∃.eats.⊤ ⊑ Animal
-    left_axiom = Right(Expression([Role("eats", Expression([]))]), Consept("Animal"))
+    left_axiom = Left(expr({"eats": []}), Consept("Animal"))
     engine.add_axiom(left_axiom)
     
     right_axioms = list(onto.general_class_axioms())
     
-    assert len(right_axioms) is 1
-    assert len(right_axioms[0].is_a) is 1
+    assert len(right_axioms) == 1
+    assert len(right_axioms[0].is_a) == 1
             
     onto.destroy()
 
@@ -44,13 +45,13 @@ def test_add_list_right_axiom():
     engine = OwlEngine(onto)
     
     # ∃.eats.(∃.eats.⊤ ⊓ Mouse) ⊑ Animal
-    axiom = Right(Expression([Role("eats", Expression([Role("eats", Expression([]))])), Consept("Mouse")]), Consept("Animal"))
+    axiom = Left(expr({"eats": [{"eats": []}, "Mouse"]}), Consept("Animal"))
     engine.add_axiom(axiom)
     
     axioms = list(onto.general_class_axioms())
     
-    assert len(axioms) is 1
-    assert len(axioms[0].is_a) is 1
+    assert len(axioms) == 1
+    assert len(axioms[0].is_a) == 1
         
     onto.destroy()
 
@@ -61,13 +62,13 @@ def test_add_left_axiom():
     engine = OwlEngine(onto)
     
     # Animal ⊑ ∃.eats.(∃.eats.⊤ ⊓ Mouse)
-    axiom = Left(Consept("Animal"), Expression([Role("eats", Expression([Role("eats", Expression([]))])), Consept("Mouse")]))
+    axiom = Right(Consept("Animal"), expr({"eats": [{"eats": []}, "Mouse"]}))
     
     engine.add_axiom(axiom)
     animal = onto.Animal
     
     assert animal is not None
-    assert len(animal.is_a) is 2 # the thing above + owl.Thing
+    assert len(animal.is_a) == 2 # the thing above + owl.Thing
     
     onto.destroy()
     
@@ -78,15 +79,15 @@ def test_entails_left():
     engine = OwlEngine(onto)
     
     # Mother ⊑ ∃.parent_of.Mother
-    axiom = Left(Consept("Mother"), Expression([Role("parentOf", Expression([Consept("Mother")]))]))
+    axiom = Right(Consept("Mother"), expr({"parent_of": ["Mother"]}))
     engine.add_axiom(axiom)
     
     # entails: Mother ⊑ ∃.parent_of.⊤
-    assert engine.entails(Left(Consept("Mother"), Expression([Role("parentOf", Expression([]))])))
-    # does not entail: Mother ⊑ ∃.parent_of.⊤
-    assert not engine.entails(Left(Consept("Mother"), Expression([Role("parentOf", Expression([Consept("Father")]))])))
+    assert engine.entails(Right(Consept("Mother"), expr({"parent_of": []})))
+    # does not entail: Mother ⊑ ∃.parent_of.Father
+    assert not engine.entails(Right(Consept("Mother"), expr({"parent_of": ["Father"]})))
     # entails: Mother ⊑ ∃.parent_of.(∃.parent_of.⊤)
-    assert engine.entails(Left(Consept("Mother"), Expression([Role("parentOf", Expression([Role("parentOf", Expression([]))]))])))
+    assert engine.entails(Right(Consept("Mother"), expr({"parent_of": [{"parent_of": []}]})))
     
     onto.destroy()
     
@@ -100,15 +101,15 @@ def test_entails_right():
     # Ontology
     # ∃.parent_of.Parent ⊑ Parent
     # Mother ⊑ Parent
-    axiom_1 = Right(Expression([Role("parentOf", Expression([Consept("Parent")]))]), Consept("Parent"))
-    axiom_2 = Left(Consept("Mother"), Expression([Consept("Parent")]))
+    axiom_1 = Left(expr({"parent_of": ["Parent"]}), Consept("Parent"))
+    axiom_2 = Right(Consept("Mother"), expr("Parent"))
     engine.add_axiom(axiom_1)
     engine.add_axiom(axiom_2)
     
     # entails: ∃.parent_of.Mother ⊑ Parent
-    assert engine.entails(Right(Expression([Role("parentOf", Expression([Consept("Mother")]))]), Consept("Parent")))
+    assert engine.entails(Left(expr({"parent_of": ["Mother"]}), Consept("Parent")))
     # does not etail: ∃.parent_of.⊤ ⊑ Parent
-    assert not engine.entails(Right(Expression([Role("parentOf", Expression([]))]), Consept("Parent")))
+    assert not engine.entails(Left(expr({"parent_of": []}), Consept("Parent")))
     
     onto.destroy()
 
@@ -121,11 +122,11 @@ def test_entails_right_left():
     
     # Ontology
     # Mother ⊑ Parent
-    axiom = Right(Expression([Consept("Mother")]), Consept("Parent"))
+    axiom = Left(expr("Mother"), Consept("Parent"))
     engine.add_axiom(axiom)
     
     # entails: Mother ⊑ Parent
-    assert engine.entails(Left(Consept("Mother"), Expression([Consept("Parent")])))
+    assert engine.entails(Right(Consept("Mother"), expr("Parent")))
                           
     onto.destroy()
 
@@ -138,10 +139,10 @@ def test_entails_left_right():
     
     # Ontology
     # Mother ⊑ Parent
-    axiom = Left(Consept("Mother"), Expression([Consept("Parent")]))
+    axiom = Right(Consept("Mother"), expr("Parent"))
     engine.add_axiom(axiom)
     
     # entails: Mother ⊑ Parent
-    assert engine.entails(Right(Expression([Consept("Mother")]), Consept("Parent")))
+    assert engine.entails(Left(expr("Mother"), Consept("Parent")))
                           
     onto.destroy()

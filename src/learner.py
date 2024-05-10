@@ -1,17 +1,20 @@
-from src.dataclass import *
-from src.protocols import Teacher
-from typing import Protocol
+from __future__ import annotations
+
+from src.dataclass import Right, Left
+from src.protocols import Teacher, InclutionAxiom, Expression, Consept
+from typing import Protocol, List
+import copy
 
 class Engine(Protocol):
     """The engine is what the Learner uses to do operations on its hypothosis ontology.
     """
-    def entails(self, axiom: Left | Right) -> bool:
+    def entails(self, axiom: Right | Left | InclutionAxiom) -> bool:
         ...
     
-    def add_axiom(self, axiom: Left | Right):
+    def add_axiom(self, axiom: Right | Left):
         ...
     
-    def get_hypothisis(self) -> List[Left | Right]:
+    def get_hypothisis(self) -> List[Right | Left]:
         ...
 
 class LearnerImpl:
@@ -37,30 +40,34 @@ class LearnerImpl:
     
     def _get_hypothis(self) -> List[InclutionAxiom]:
         return [a.inclution_axiom() for a in self.engine.get_hypothisis()]
-     
-    def _termenologi_counter_example(self, counter_example: InclutionAxiom) -> Left | Right:
+    
+    def _is_consept(self, expression: Expression) -> bool:
+        return len(expression.consepts) == 0 and len(expression.roles) == 0
+    
+    def _termenologi_counter_example(self, counter_example: InclutionAxiom) -> Right | Left:
         
-        if len(counter_example.right.inf) == 1 and isinstance(counter_example.right.inf[0], Consept):
-            return Right(counter_example.right, counter_example.right.inf[0])
+        if self._is_consept(counter_example.right):
+            return Left(counter_example.left, counter_example.right.consepts[0])
         
-        if len(counter_example.left.inf) == 1 and isinstance(counter_example.left.inf[0], Consept):
-            return Left(counter_example.left.inf[0], counter_example.right)
+        if self._is_consept(counter_example.left):
+            return Right(counter_example.left.consepts[0], counter_example.right)
         
         for n in counter_example.left:
             for c in self.teacher.get_consepts():
-                r = Right(n,c)
-                if (self._is_counter_example(r)):
-                    return r
+                l = Left(n,c)
+                if (self._is_counter_example(l)):
+                    return l
         
         for n in counter_example.right:
             for c in self.teacher.get_consepts():
-                l = Left(c,n)
+                r = Right(c,n)
                 if (self._is_counter_example(r)):
-                    return l
-        raise
+                    return r
+        
+        raise ValueError("Counter example could not be made into a ")
             
         
-    def _is_counter_example(self, axiom: Left | Right) -> bool:
+    def _is_counter_example(self, axiom: Right | Left) -> bool:
         return (not self.engine.entails(axiom)) and (self.teacher.membership_query(axiom.inclution_axiom()))
     
     
@@ -69,3 +76,83 @@ class LearnerImpl:
     
     def left_o_essensial(self, axiom: Left) -> Left:
         ... # TODO
+    
+    def saturate_right(self, axiom: Right) -> Right:
+        root = True
+        for e in axiom.right:
+            for c in self.teacher.get_consepts():
+                if (root and c == axiom.left) or c in e.consepts:
+                    continue
+                e.consepts.append(c)
+                if not self._is_counter_example(axiom):
+                    e.consepts.pop()
+            root = False
+        return axiom
+    
+    def saturate_left(self, axiom: Left) -> Left:
+        org_express = copy.deepcopy(axiom.left)
+        
+        root = True
+        for e in axiom.left:
+            for c in self.teacher.get_consepts():
+                if (root and c == axiom.right) or c in e.consepts:
+                    continue
+                e.consepts.append(c)
+                if not self.engine.entails(InclutionAxiom(org_express, axiom.left)):
+                    e.consepts.pop()
+                else:
+                    org_express = copy.deepcopy(axiom.left)
+            root = False
+        return axiom
+    
+    def decompose_right(self, right: Right) -> Right:
+        axiom = right
+        root = True
+        
+        for n in axiom.right:
+            for c in n.consepts:
+                if (root and c == right.left):
+                    continue
+                
+                for i in range(len(n.roles)-1, -1, -1):
+                    r = n.roles[i]
+                    a = Right(c, Expression([], [r]))
+                    
+                    if self.teacher.membership_query(a.inclution_axiom()):
+                        if self.engine.entails(a):
+                            n.roles.pop(i) # TODO: This does not work for some reason. It is a different object.
+                        else:
+                            return self.decompose_right(a)
+            
+            root = False
+        
+        return axiom
+    
+    
+    def decompose_left(self, left: Left) -> Left:
+        axiom = left
+        root = True
+        
+        for n in axiom.left:
+            if not root:
+                for c in self.teacher.get_consepts():
+                    a = Left(n, c)
+                    if self._is_counter_example(a):
+                        return self.decompose_left(a)
+            
+            for i in range(len(n.roles)):
+                roles_copy = n.roles.copy()
+                n.roles.pop(i)
+                for c in self.teacher.get_consepts():
+                    a = Left(axiom.left, c)
+                    if self._is_counter_example(a):
+                        axiom.right = c
+                        roles_copy = n.roles.copy()
+                    else:
+                        n.roles = roles_copy
+            
+            root = False
+        
+        return left
+        
+      
