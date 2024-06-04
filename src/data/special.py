@@ -3,7 +3,7 @@ from typing import List
 
 from dataclasses import dataclass
 
-from src.protocols import Consept, Expression, InclutionAxiom
+from src.data.communication import Concept, Expression, InclutionAxiom
 
 @dataclass
 class Right:
@@ -11,7 +11,7 @@ class Right:
     
     Consept ⊑ Expression
     """
-    left: Consept
+    left: Concept
     right: Expression
     
     def inclution_axiom(self) -> InclutionAxiom:
@@ -29,7 +29,7 @@ class Left:
     Expression ⊑ Consept
     """
     left: Expression
-    right: Consept
+    right: Concept
     
     def inclution_axiom(self) -> InclutionAxiom:
         """Converts the left inclution into a general inclution

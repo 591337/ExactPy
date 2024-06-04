@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from src.dataclass import Right, Left
-from src.protocols import Teacher, InclutionAxiom, Expression, Consept, Role
+from src.data.special import Right, Left
+from src.data.communication import InclutionAxiom, Expression, Concept, Role
+from src.teacher.teacher import Teacher
 from typing import Protocol, List
 import copy
 
@@ -9,12 +10,41 @@ class Engine(Protocol):
     """The engine is what the Learner uses to do operations on its hypothosis ontology.
     """
     def entails(self, axiom: Right | Left | InclutionAxiom) -> bool:
+        """The method should implement wreather ot not an axiom is entailed by the engines ontology
+
+        Args:
+            axiom (Right | Left | InclutionAxiom): The axiom to test
+
+        Returns:
+            bool: True if the axiom is entailed from the engines ontology
+        """
         ...
     
-    def add_axiom(self, axiom: Right | Left):
+    def add_axiom(self, axiom: Right | Left): # TODO: Should this one override existing once? Could they be merged in case they are doubled
+        """Adds an axiom to the engines ontology
+
+        Args:
+            axiom (Right | Left): Axiom to be added
+        """
         ...
     
     def get_hypothisis(self) -> List[Right | Left]:
+        """Get the onology in form of axioms
+
+        Returns:
+            List[Right | Left]: The ontology as a list of axioms
+        """
+        ...
+    
+    def get_right_from_hypothisis(self, concept: Concept) -> Right | None:
+        """Gets the 
+
+        Args:
+            concept (Consept): _description_
+
+        Returns:
+            Right | None: _description_
+        """
         ...
 
 class LearnerImpl:
@@ -41,30 +71,30 @@ class LearnerImpl:
     def _get_hypothis(self) -> List[InclutionAxiom]:
         return [a.inclution_axiom() for a in self.engine.get_hypothisis()]
     
-    def _is_consept(self, expression: Expression) -> bool:
-        return len(expression.consepts) == 0 and len(expression.roles) == 0
+    def _is_concept(self, expression: Expression) -> bool:
+        return len(expression.concepts) == 0 and len(expression.roles) == 0
     
     def _termenologi_counter_example(self, counter_example: InclutionAxiom) -> Right | Left:
         
-        if self._is_consept(counter_example.right):
-            return Left(counter_example.left, counter_example.right.consepts[0])
+        if self._is_concept(counter_example.right):
+            return Left(counter_example.left, counter_example.right.concepts[0])
         
-        if self._is_consept(counter_example.left):
-            return Right(counter_example.left.consepts[0], counter_example.right)
+        if self._is_concept(counter_example.left):
+            return Right(counter_example.left.concepts[0], counter_example.right)
         
         for n in counter_example.left:
-            for c in self.teacher.get_consepts():
+            for c in self.teacher.get_concepts():
                 l = Left(n,c)
                 if (self._is_counter_example(l)):
                     return l
         
         for n in counter_example.right:
-            for c in self.teacher.get_consepts():
+            for c in self.teacher.get_concepts():
                 r = Right(c,n)
                 if (self._is_counter_example(r)):
                     return r
         
-        raise ValueError("Counter example could not be made into a ")
+        raise ValueError("Counter example could not be made into a terminology")
             
         
     def _is_counter_example(self, axiom: Right | Left) -> bool:
@@ -72,20 +102,46 @@ class LearnerImpl:
     
     
     def right_o_essensial(self, axiom: Right) -> Right:
-        ... # TODO
+        axiom = self._right_o_essensial(axiom)
+        
+        hyp = self.engine.get_right_from_hypothisis(axiom.left)
+        
+        if hyp != None:
+            expr = axiom.right
+            for c in hyp.right.concepts:
+                if c not in expr.concepts:
+                    expr.concepts.append(c)
+            
+            expr.roles.extend(hyp.right.roles)
+            
+            axiom = self._right_o_essensial(axiom)
+        
+        return axiom
+        
+    
+    def _right_o_essensial(self, axiom: Right) -> Right:
+        axiom = self.decompose_right(axiom)
+        axiom = self.saturate_right(axiom)
+        axiom = self.decompose_right(axiom)
+        axiom = self.sibling_merge(axiom)
+        
+        return axiom
     
     def left_o_essensial(self, axiom: Left) -> Left:
-        ... # TODO
+        axiom = self.decompose_left(axiom)
+        axiom = self.saturate_left(axiom)
+        
+        return axiom
     
     def saturate_right(self, axiom: Right) -> Right:
         root = True
         for e in axiom.right:
-            for c in self.teacher.get_consepts():
-                if (root and c == axiom.left) or c in e.consepts:
+            for c in self.teacher.get_concepts():
+                if (root and c == axiom.left) or c in e.concepts:
                     continue
-                e.consepts.append(c)
+                e.concepts.append(c)
                 if not self._is_counter_example(axiom):
-                    e.consepts.pop()
+                    e.concepts.pop()
             root = False
         return axiom
     
@@ -94,12 +150,12 @@ class LearnerImpl:
         
         root = True
         for e in axiom.left:
-            for c in self.teacher.get_consepts():
-                if (root and c == axiom.right) or c in e.consepts:
+            for c in self.teacher.get_concepts():
+                if (root and c == axiom.right) or c in e.concepts:
                     continue
-                e.consepts.append(c)
+                e.concepts.append(c)
                 if not self.engine.entails(InclutionAxiom(org_express, axiom.left)):
-                    e.consepts.pop()
+                    e.concepts.pop()
                 else:
                     org_express = copy.deepcopy(axiom.left)
             root = False
@@ -110,7 +166,7 @@ class LearnerImpl:
         root = True
         
         for n in axiom.right:
-            for c in n.consepts:
+            for c in n.concepts:
                 if (root and c == right.left):
                     continue
                 
@@ -135,7 +191,7 @@ class LearnerImpl:
         
         for n in axiom.left:
             if not root:
-                for c in self.teacher.get_consepts():
+                for c in self.teacher.get_concepts():
                     a = Left(n, c)
                     if self._is_counter_example(a):
                         return self.decompose_left(a)
@@ -143,13 +199,16 @@ class LearnerImpl:
             for i in range(len(n.roles)):
                 roles_copy = n.roles.copy()
                 n.roles.pop(i)
-                for c in self.teacher.get_consepts():
+                found = False
+                for c in self.teacher.get_concepts():
                     a = Left(axiom.left, c)
                     if self._is_counter_example(a):
                         axiom.right = c
                         roles_copy = n.roles.copy()
-                    else:
-                        n.roles = roles_copy
+                        found = True
+                        break
+                if not found:
+                    n.roles = roles_copy
             
             root = False
         
@@ -180,14 +239,14 @@ class LearnerImpl:
                     
 
     def expression_merge(self, exp1: Expression, exp2: Expression) -> Expression:
-        consepts = exp1.consepts.copy()
-        for c in exp2.consepts:
-            if c not in consepts:
-                consepts.append(c)
+        concepts = exp1.concepts.copy()
+        for c in exp2.concepts:
+            if c not in concepts:
+                concepts.append(c)
         
         roles = exp1.roles.copy()
         roles.extend(exp2.roles)
         
-        return Expression(consepts, roles)
+        return Expression(concepts, roles)
         
         

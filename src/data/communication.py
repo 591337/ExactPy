@@ -1,50 +1,9 @@
 from __future__ import annotations
-from typing import Protocol, Set
-from typing import List
-
 from dataclasses import dataclass
 
-class Learner(Protocol):
-    """The learner is the basis of the Angluin's exact learning framework.
-    It inteacts with a teacher by sending it queries.
-    """
-    def run_learner(self) -> List[InclutionAxiom]:
-        ...
+from typing import List, Dict
 
-class Teacher(Protocol):
-    """The teacher is who the learner askes questions to in order to learn the ontology
-    """
-    def membership_query(self, axiom: InclutionAxiom) -> bool:
-        """Checks if an axiom is the member of the target ontology
-
-        Args:
-            axiom (InclutionAxiom): the axiom to check against the ontology
-
-        Returns:
-            bool: true if the axiom is a logical consequense of the ontology
-        """
-        ...
-    
-    def equivalence_query(self, axioms: List[InclutionAxiom]) -> InclutionAxiom | None:
-        """Checks if an hypothesis ontology is equivalent with the target ontology. It gives
-        an counter example if it is not true.
-
-        Args:
-            axioms (List[InclutionAxiom]): The hypothesis ontology to be check against the target. 
-
-        Returns:
-            InclutionAxiom | None: If it is not a logical consequense, it returns an counter example.
-            if it is a logical consequense, it returns None.
-        """
-        ...
-    
-    def get_consepts(self) -> List[Consept]:
-        """The learner is responsible to know what Consepts and Roles the ontology consists of.
-
-        Returns:
-            List[Consept]: The consepts of the ontology.
-        """
-        ...
+from collections import defaultdict
 
 @dataclass
 class InclutionAxiom:
@@ -67,14 +26,53 @@ class Expression:
     """Here, an expression consists of a list of Consepts and Roles. An empty list is treated as ⊤
     
     example: element ⊓ element ⊓ element (where element are different Consepts and Roles)
+    
+    The class has an iterator goes through the expresson as a tree where each expression is a node and the roles are edges between them.
+    It is a breadth-first search algorithm that allows for changing the children of a node as long as you haven't moved pased the node.
     """
-    consepts: List[Consept]
+    concepts: List[Concept]
     roles: List[Role]
+    
+    def _group_by_role_name(self, roles: List[Role]) -> Dict[str, List[Role]]:
+        grouped = defaultdict(list)
+        for item in roles:
+            grouped[item.name].append(item)
+        return grouped
     
     def __iter__(self):
         return ExpressionIterator(self)
+    
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, Expression):
+            return False
+        
+        if set(value.concepts) != set(self.concepts):
+            return False
+        
+        if len(value.roles) != len(self.roles):
+            return False
+        
+        # This part is not the best way of doing it, but it works.
+        grouped = self._group_by_role_name(value.roles)
+        
+        for r in self.roles:
+            found = False
+            l = grouped[r.name]
+            for i in l:
+                if r.expression == i.expression:
+                    found = True
+                    break
+            if not found:
+                return False
+        
+        return True
+    
+    
+        
 
 class ExpressionIterator:
+    """The iterator of an Expression
+    """
     def __init__(self, root_expression: Expression):
         self.iter_queue = [root_expression]
         self.current_node = None
@@ -95,9 +93,10 @@ class ExpressionIterator:
         self.current_node = self.iter_queue.pop(0)
         return self.current_node
 
+
 @dataclass(eq=True, frozen=True)
-class Consept:
-    """A consept atomic and contains only a name
+class Concept:
+    """A concept atomic and contains only a name
     
     example: Mother (where Mother is the name)"""
     name: str
@@ -109,3 +108,9 @@ class Role:
     example: ∃.eats.expression (where eats is the name and expression is an expression)"""
     name: str
     expression: Expression
+    
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, Role):
+            return False
+        
+        return value.name == self.name and value.expression == self.expression
