@@ -1,44 +1,44 @@
 from typing import Protocol, List
-from src.data.special import Right, Left
-from src.data.communication import InclutionAxiom, Concept
+from src.data.special import RightTerminology, LeftTerminology
+from src.data.communication import InclusionAxiom, ConceptExpression
 
 class Engine(Protocol):
-    """The engine is what the Learner uses to do operations on its hypothosis ontology.
+    """The engine is what the Learner uses to do operations on its hypothesis ontology.
     """
-    def entails(self, axiom: Right | Left | InclutionAxiom) -> bool:
-        """The method should implement wreather ot not an axiom is entailed by the engines ontology
+    def entails(self, axiom: RightTerminology | LeftTerminology | InclusionAxiom) -> bool:
+        """The method should implement whether or not an axiom is entailed by the engines ontology
 
         Args:
-            axiom (Right | Left | InclutionAxiom): The axiom to test
+            axiom (RightTerminology | LeftTerminology | InclusionAxiom): The axiom to test
 
         Returns:
             bool: True if the axiom is entailed from the engines ontology
         """
         ...
     
-    def add_axiom(self, axiom: Right | Left): # TODO: Should this one override existing once? Could they be merged in case they are doubled
-        """Adds an axiom to the engines ontology
+    def add_axiom(self, axiom: RightTerminology | LeftTerminology):
+        """Adds an axiom to the engines ontology. If there is a terminology with that given concept, it gets overwritten.
 
         Args:
-            axiom (Right | Left): Axiom to be added
+            axiom (RightTerminology | LeftTerminology): Axiom to be added
         """
         ...
     
-    def get_hypothisis(self) -> List[Right | Left]:
-        """Get the onology in form of axioms
+    def get_hypothesis(self) -> List[RightTerminology | LeftTerminology]:
+        """Get the ontology in form of axioms
 
         Returns:
             List[Right | Left]: The ontology as a list of axioms
         """
         ...
     
-    def get_right_from_hypothisis(self, concept: Concept) -> Right | None:
-        """Gets the 
+    def get_right_from_hypothesis(self, concept_expression: ConceptExpression) -> RightTerminology | None:
+        """Gets a right terminology based on a given concept expression.
 
         Args:
-            concept (Consept): _description_
+            concept_expression (ConceptExpression): The concept expression that is used when getting the terminology
 
         Returns:
-            Right | None: _description_
+            RightTerminology | None: Returns the given right terminology. Returns None if it does not exist.
         """
         ...

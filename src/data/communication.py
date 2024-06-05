@@ -4,62 +4,80 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 from collections import defaultdict
+"""
+These are the data types that the learner and teacher uses when they communicate.
+The axioms are build from two trees.
+
+A Node has a list of ConceptExpressions and a list of Edges. Each edge has a Role and a target Node.
+"""
 
 @dataclass
-class InclutionAxiom:
-    """A general inclution axiom class consisting of a left and right Expression. These are meant as an interface for the learner and teacher to communicate.
+class InclusionAxiom:
+    """A general inclusion axiom class consisting of a left and right Expression.
+    These are meant as an interface for the learner and teacher to communicate.
     
-    example: left ⊑ right (where left and right are Expressions)
+        left ⊑ right
     
-    example of translations between EL descriptive language and InclutionAxiom:
-    
+    Example:
         Mother ⊑ ∃.parent_of.⊤
         
-        `InclutionAxiom(left=Expression([Consept("Mother")]), right=Expression([Role("parent_of", Expression([]))]))`
-    
+        ```
+        left_node = Node(labels=[ConceptExpression("Mother")], edges=[])
+        right_node = Node(labels=[], edges=[Edge(role=Role("parent_of"), target=Node([],[]))])
+        
+        InclusionAxiom(left=left_node, right=right_node)
+        ```
     """
-    left: Expression
-    right: Expression
+    left: Node
+    right: Node
 
 @dataclass
-class Expression:
-    """Here, an expression consists of a list of Consepts and Roles. An empty list is treated as ⊤
+class Node:
+    """Here, an expression consists of a list of ConceptExpressions and Edges. If both are empty, the node should be treated as ⊤
     
-    example: element ⊓ element ⊓ element (where element are different Consepts and Roles)
+        concept_expression ⊓ concept_expression ⊓ edge ⊓ edge
     
-    The class has an iterator goes through the expresson as a tree where each expression is a node and the roles are edges between them.
-    It is a breadth-first search algorithm that allows for changing the children of a node as long as you haven't moved pased the node.
+    example:
+        Mother ⊓ Human ⊓ ∃.parent_of.⊤
+        
+        ```
+        mother = ConceptExpression("Mother")
+        human = ConceptExpression("Human")
+        parent_of = Edge(role=Role("parent_of"), target=Node([],[]))
+        
+        Node(labels=[mother,human], edges=[parent_of])
+        ```
     """
-    concepts: List[Concept]
-    roles: List[Role]
+    labels: List[ConceptExpression]
+    edges: List[Edge]
     
-    def _group_by_role_name(self, roles: List[Role]) -> Dict[str, List[Role]]:
+    def _group_by_role_name(self, edges: List[Edge]) -> Dict[Role, List[Edge]]:
         grouped = defaultdict(list)
-        for item in roles:
-            grouped[item.name].append(item)
+        for item in edges:
+            grouped[item.label].append(item)
         return grouped
     
     def __iter__(self):
-        return ExpressionIterator(self)
+        return NodeIterator(self)
     
     def __eq__(self, value: object) -> bool:
-        if not isinstance(value, Expression):
+        if not isinstance(value, Node):
             return False
         
-        if set(value.concepts) != set(self.concepts):
+        if set(value.labels) != set(self.labels):
             return False
         
-        if len(value.roles) != len(self.roles):
+        if len(value.edges) != len(self.edges):
             return False
         
         # This part is not the best way of doing it, but it works.
-        grouped = self._group_by_role_name(value.roles)
+        grouped = self._group_by_role_name(value.edges)
         
-        for r in self.roles:
+        for r in self.edges:
             found = False
-            l = grouped[r.name]
+            l = grouped[r.label]
             for i in l:
-                if r.expression == i.expression:
+                if r.target == i.target:
                     found = True
                     break
             if not found:
@@ -70,10 +88,12 @@ class Expression:
     
         
 
-class ExpressionIterator:
-    """The iterator of an Expression
+class NodeIterator:
+    """    
+    The class iterates through the nodes. It uses a breadth-first search algorithm that allows for
+    changing the children of a node as long as you haven't moved passed the node.
     """
-    def __init__(self, root_expression: Expression):
+    def __init__(self, root_expression: Node):
         self.iter_queue = [root_expression]
         self.current_node = None
 
@@ -85,7 +105,7 @@ class ExpressionIterator:
             raise StopIteration
         
         if self.current_node != None:
-            self.iter_queue.extend(r.expression for r in self.current_node.roles)
+            self.iter_queue.extend(r.target for r in self.current_node.edges)
         
         if len(self.iter_queue) == 0:
             raise StopIteration
@@ -95,22 +115,29 @@ class ExpressionIterator:
 
 
 @dataclass(eq=True, frozen=True)
-class Concept:
-    """A concept atomic and contains only a name
+class ConceptExpression:
+    """A concept expression is an atomic label for the node
     
     example: Mother (where Mother is the name)"""
     name: str
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Role:
+    """A role is the name of a edge
+    
+    example: parent_of"""
+    name: str
+
+@dataclass
+class Edge:
     """A rol consists of a name and an expression
     
     example: ∃.eats.expression (where eats is the name and expression is an expression)"""
-    name: str
-    expression: Expression
+    label: Role
+    target: Node
     
     def __eq__(self, value: object) -> bool:
-        if not isinstance(value, Role):
+        if not isinstance(value, Edge):
             return False
         
-        return value.name == self.name and value.expression == self.expression
+        return value.label == self.label and value.target == self.target

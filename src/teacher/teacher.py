@@ -1,11 +1,11 @@
 
 from typing import List, Protocol
-from src.data.communication import InclutionAxiom, Concept
+from src.data.communication import InclusionAxiom, ConceptExpression
 
 class Teacher(Protocol):
     """The teacher is who the learner askes questions to in order to learn the ontology
     """
-    def membership_query(self, axiom: InclutionAxiom) -> bool:
+    def membership_query(self, axiom: InclusionAxiom) -> bool:
         """Checks if an axiom is the member of the target ontology
 
         Args:
@@ -16,7 +16,7 @@ class Teacher(Protocol):
         """
         ...
     
-    def equivalence_query(self, axioms: List[InclutionAxiom]) -> InclutionAxiom | None:
+    def equivalence_query(self, axioms: List[InclusionAxiom]) -> InclusionAxiom | None:
         """Checks if an hypothesis ontology is equivalent with the target ontology. It gives
         an counter example if it is not true.
 
@@ -29,7 +29,7 @@ class Teacher(Protocol):
         """
         ...
     
-    def get_concepts(self) -> List[Concept]:
+    def get_concepts(self) -> List[ConceptExpression]:
         """The learner is responsible to know what Consepts and Roles the ontology consists of.
 
         Returns:

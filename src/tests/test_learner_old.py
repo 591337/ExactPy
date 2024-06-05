@@ -1,10 +1,10 @@
 from src.tests.expression_parser import expr
-from src.data.communication import Concept
+from src.data.communication import ConceptExpression
 import pytest
 import owlready2
 
 from src.tests.expression_parser import expr
-from src.data.special import Right, Left
+from src.data.special import RightTerminology, LeftTerminology
 from src.engine.engine_impl import OwlEngine
 
 from src.tests.teacher_mock import TestTeacher
@@ -14,16 +14,16 @@ from src.learner.learner_impl import LearnerImpl
 def test_sibling_merge():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [Concept("A"), Concept("B"), Concept("C")])
+    teacher = TestTeacher(teacher_engine, [ConceptExpression("A"), ConceptExpression("B"), ConceptExpression("C")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
     learner = LearnerImpl(engine, teacher)
     
-    merged_axiom = Right(Concept("A"), expr({"r": ["C","B"]}, {"r": ["A"]}))
+    merged_axiom = RightTerminology(ConceptExpression("A"), expr({"r": ["C","B"]}, {"r": ["A"]}))
     teacher.engine.add_axiom(merged_axiom)
     
-    axiom = Right(Concept("A"), expr({"r": ["C"]}, {"r": ["B"]}, {"r": ["A"]}))
+    axiom = RightTerminology(ConceptExpression("A"), expr({"r": ["C"]}, {"r": ["B"]}, {"r": ["A"]}))
     
     merged = learner.sibling_merge(axiom)
     
@@ -35,30 +35,30 @@ def test_decompose():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
     teacher = TestTeacher(teacher_engine, 
-        [Concept("G"), Concept("H"), Concept("A"), 
-         Concept("B"), Concept("C"), Concept("E"), 
-         Concept("F"), Concept("D"), 
+        [ConceptExpression("G"), ConceptExpression("H"), ConceptExpression("A"), 
+         ConceptExpression("B"), ConceptExpression("C"), ConceptExpression("E"), 
+         ConceptExpression("F"), ConceptExpression("D"), 
          ])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
     learner = LearnerImpl(engine, teacher)
     
-    axiom = Left(expr("A", {"r": ["B"]}), Concept("C"))
+    axiom = LeftTerminology(expr("A", {"r": ["B"]}), ConceptExpression("C"))
     teacher_engine.add_axiom(axiom)
-    axiom = Right(Concept("B"), expr("D", "E"))
-    teacher_engine.add_axiom(axiom)
-    
-    axiom = Right(Concept("E"), expr("F", {"r": ["G"]}))
-    teacher_engine.add_axiom(axiom)
-    axiom = Right(Concept("H"), expr("G"))
+    axiom = RightTerminology(ConceptExpression("B"), expr("D", "E"))
     teacher_engine.add_axiom(axiom)
     
-    axiom = Left(expr("A", {"r": ["B"]}), Concept("C"))
+    axiom = RightTerminology(ConceptExpression("E"), expr("F", {"r": ["G"]}))
+    teacher_engine.add_axiom(axiom)
+    axiom = RightTerminology(ConceptExpression("H"), expr("G"))
+    teacher_engine.add_axiom(axiom)
+    
+    axiom = LeftTerminology(expr("A", {"r": ["B"]}), ConceptExpression("C"))
     decomposed = learner.decompose_left(axiom)
-    assert decomposed == Left(expr("B"), Concept("E"))
+    assert decomposed == LeftTerminology(expr("B"), ConceptExpression("E"))
     
-    axiom = Right(Concept("E"), expr("F", {"r": ["G"]}))
+    axiom = RightTerminology(ConceptExpression("E"), expr("F", {"r": ["G"]}))
     decomposed = learner.decompose_right(axiom)
     # TODO: Not the same as the original one
     # assert decomposed == Right(Concept("H"), expr("G"))
@@ -67,19 +67,19 @@ def test_saturate_with_tree_right():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
     teacher = TestTeacher(teacher_engine, 
-        [Concept("A"), Concept("B"), Concept("C"), 
-         Concept("D"), Concept("E"), Concept("F")])
+        [ConceptExpression("A"), ConceptExpression("B"), ConceptExpression("C"), 
+         ConceptExpression("D"), ConceptExpression("E"), ConceptExpression("F")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
     learner = LearnerImpl(engine, teacher)
     
-    l = Left(expr("A", "B", "C"), Concept("Something"))
-    r = Right(Concept("Something"), expr("D", "E", "F"))
+    l = LeftTerminology(expr("A", "B", "C"), ConceptExpression("Something"))
+    r = RightTerminology(ConceptExpression("Something"), expr("D", "E", "F"))
     teacher_engine.add_axiom(l)
     teacher_engine.add_axiom(r)
     
-    axiom = Right(Concept("A"), expr("B", "C"))
+    axiom = RightTerminology(ConceptExpression("A"), expr("B", "C"))
     
     teacher_engine.add_axiom(axiom)
     
@@ -87,7 +87,7 @@ def test_saturate_with_tree_right():
     
     axiom = learner.saturate_right(counter_example)
     
-    assert axiom == Right(Concept("A"), expr("B","C","D","E","F"))
+    assert axiom == RightTerminology(ConceptExpression("A"), expr("B","C","D","E","F"))
     
 """    
 

@@ -3,38 +3,38 @@ from typing import List
 
 from dataclasses import dataclass
 
-from src.data.communication import Concept, Expression, InclutionAxiom
+from src.data.communication import ConceptExpression, Node, InclusionAxiom
 
 @dataclass
-class Right:
-    """A incluton consisting of a left Consept and right Expression. This is know as a EL_rhs
+class RightTerminology:
+    """A inclusion consisting of a left ConceptExpression and right complex expression (node). This is know as a EL_rhs
     
-    Consept ⊑ Expression
+    Mother ⊑ ∃.parent_of.⊤
     """
-    left: Concept
-    right: Expression
+    left: ConceptExpression
+    right: Node
     
-    def inclution_axiom(self) -> InclutionAxiom:
-        """Converts the left inclution into a general inclution
+    def inclusion_axiom(self) -> InclusionAxiom:
+        """Converts the left inclusion into a general inclusion
 
         Returns:
-            InclutionAxiom: Axiom as an inclution
+            InclusionAxiom: Axiom as an inclusion
         """
-        return InclutionAxiom(Expression([self.left], []), self.right)
+        return InclusionAxiom(Node([self.left], []), self.right)
 
 @dataclass
-class Left:
-    """A incluton consisting of a left Expression and right Consept. This is know as a EL_lhs
+class LeftTerminology:
+    """A inclusion consisting of a left complex expression (node) and right ConceptExpression. This is know as a EL_lhs
     
-    Expression ⊑ Consept
+    ∃.parent_of.⊤ ⊑ Mother
     """
-    left: Expression
-    right: Concept
+    left: Node
+    right: ConceptExpression
     
-    def inclution_axiom(self) -> InclutionAxiom:
-        """Converts the left inclution into a general inclution
+    def inclusion_axiom(self) -> InclusionAxiom:
+        """Converts the left inclusion into a general inclusion
 
         Returns:
-            InclutionAxiom: Axiom as an inclution
+            InclusionAxiom: Axiom as an inclusion
         """
-        return InclutionAxiom(self.left, Expression([self.right], []))
+        return InclusionAxiom(self.left, Node([self.right], []))

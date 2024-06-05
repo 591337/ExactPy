@@ -1,9 +1,9 @@
 import pytest
 
 from src.tests.expression_parser import expr
-from src.data.communication import Expression
+from src.data.communication import Node, Role, ConceptExpression
 
-def test_iteratior():
+def test_iterator():
     exp = expr("1", {"2": ["2"]}, {"3": ["3"]})
     
     it = iter(exp)
@@ -12,13 +12,13 @@ def test_iteratior():
     
     assert e is exp
     
-    assert isinstance(e, Expression)
-    assert e.concepts[0].name == "1"
+    assert isinstance(e, Node)
+    assert e.labels[0] == ConceptExpression("1")
         
-    assert e.roles.pop(0).name == "2"
+    assert e.edges.pop(0).label == Role("2")
     
     e = next(it)
     
-    assert e is exp.roles[0].expression
+    assert e is exp.edges[0].target
     
-    assert e.concepts[0].name == "3"
+    assert e.labels[0] == ConceptExpression("3")
