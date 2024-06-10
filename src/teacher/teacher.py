@@ -3,16 +3,16 @@ from typing import List, Protocol
 from src.data.communication import InclusionAxiom, ConceptExpression
 
 class Teacher(Protocol):
-    """The teacher is who the learner askes questions to in order to learn the ontology
+    """The teacher is who the learner asks questions to in order to learn the ontology
     """
     def membership_query(self, axiom: InclusionAxiom) -> bool:
         """Checks if an axiom is the member of the target ontology
 
         Args:
-            axiom (InclutionAxiom): the axiom to check against the ontology
+            axiom (InclusionAxiom): the axiom to check against the ontology
 
         Returns:
-            bool: true if the axiom is a logical consequense of the ontology
+            bool: true if the axiom is a logical consequence of the ontology
         """
         ...
     
@@ -21,18 +21,18 @@ class Teacher(Protocol):
         an counter example if it is not true.
 
         Args:
-            axioms (List[InclutionAxiom]): The hypothesis ontology to be check against the target. 
+            axioms (List[InclusionAxiom]): The hypothesis ontology to be check against the target. 
 
         Returns:
-            InclutionAxiom | None: If it is not a logical consequense, it returns an counter example.
-            if it is a logical consequense, it returns None.
+            InclusionAxiom | None: If it is not a logical consequence, it returns an counter example.
+            if it is a logical consequence, it returns None.
         """
         ...
     
     def get_concepts(self) -> List[ConceptExpression]:
-        """The learner is responsible to know what Consepts and Roles the ontology consists of.
+        """The learner is responsible to know what concepts expression and roles the ontology consists of.
 
         Returns:
-            List[Consept]: The concepts of the ontology.
+            List[ConceptExpression]: The concepts of the ontology.
         """
         ...

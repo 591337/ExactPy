@@ -6,15 +6,11 @@ from src.data.special import RightTerminology, LeftTerminology
 import types
 import os
 
-owlready2.JAVA_EXE = "C:\\Users\\marti\\.jdks\\openjdk-17.0.2\\bin\\java.exe"
+from src.data.communication import ConceptExpression, Edge, Node, InclusionAxiom
 
-"""
 owl_java = "JAVA_EXE"
 if owl_java in os.environ:
     owlready2.JAVA_EXE = os.environ[owl_java]
-"""
-
-from src.data.communication import ConceptExpression, Edge, Node, InclusionAxiom
 
 @dataclass
 class OntologyMap:
