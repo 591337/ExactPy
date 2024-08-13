@@ -36,3 +36,5 @@ class Teacher(Protocol):
             List[ConceptExpression]: The concepts of the ontology.
         """
         ...
+        
+

@@ -72,7 +72,7 @@ def test_right_saturation():
     
     assert axiom == RightTerminology(ConceptExpression("Human"), expr({"hasParent": ["Human", {"hasParent": ["Human"]}]}))
 
-def test_right_decompesision():
+def test_right_decomposition():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
     teacher = TestTeacher(teacher_engine, [ConceptExpression("Woman"), ConceptExpression("Human")])

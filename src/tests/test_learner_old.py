@@ -59,9 +59,9 @@ def test_decompose():
     assert decomposed == LeftTerminology(expr("B"), ConceptExpression("E"))
     
     axiom = RightTerminology(ConceptExpression("E"), expr("F", {"r": ["G"]}))
+    axiom = learner.saturate_right(axiom) # Old implementation always
     decomposed = learner.decompose_right(axiom)
-    # TODO: Not the same as the original one
-    # assert decomposed == Right(Concept("H"), expr("G"))
+    # assert decomposed == RightTerminology(ConceptExpression("H"), expr("G"))
 
 def test_saturate_with_tree_right():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
