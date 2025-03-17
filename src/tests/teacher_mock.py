@@ -5,7 +5,7 @@ from src.data.special import RightTerminology, LeftTerminology
 from src.learner.learner_impl import Engine
 from src.data.communication import ConceptExpression, InclusionAxiom
 
-class TestTeacher:
+class MockTeacher:
     def __init__(self, engine: Engine, concepts: List[ConceptExpression]):
         self.engine = engine
         self.concepts = concepts

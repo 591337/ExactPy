@@ -7,14 +7,23 @@ from src.tests.expression_parser import expr
 from src.data.special import RightTerminology, LeftTerminology
 from src.engine.engine_impl import OwlEngine
 
-from src.tests.teacher_mock import TestTeacher
+from src.tests.teacher_mock import MockTeacher
 
 from src.learner.learner_impl import LearnerImpl
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # This is necessery to clean up the ontology
+    yield
+    onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
+    onto.destroy()
+    onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
+    onto.destroy()
 
 def test_sibling_merge():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("A"), ConceptExpression("B"), ConceptExpression("C")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("A"), ConceptExpression("B"), ConceptExpression("C")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
@@ -34,7 +43,7 @@ def test_sibling_merge():
 def test_decompose():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, 
+    teacher = MockTeacher(teacher_engine, 
         [ConceptExpression("G"), ConceptExpression("H"), ConceptExpression("A"), 
          ConceptExpression("B"), ConceptExpression("C"), ConceptExpression("E"), 
          ConceptExpression("F"), ConceptExpression("D"), 
@@ -66,7 +75,7 @@ def test_decompose():
 def test_saturate_with_tree_right():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, 
+    teacher = MockTeacher(teacher_engine, 
         [ConceptExpression("A"), ConceptExpression("B"), ConceptExpression("C"), 
          ConceptExpression("D"), ConceptExpression("E"), ConceptExpression("F")])
     

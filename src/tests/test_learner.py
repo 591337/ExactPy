@@ -5,18 +5,27 @@ from src.tests.expression_parser import expr
 from src.data.special import RightTerminology, LeftTerminology
 from src.engine.engine_impl import OwlEngine
 
-from src.tests.teacher_mock import TestTeacher
+from src.tests.teacher_mock import MockTeacher
 
 from src.learner.learner_impl import LearnerImpl
 
 from src.data.communication import ConceptExpression
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # This is necessery to clean up the ontology
+    yield
+    onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
+    onto.destroy()
+    onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
+    onto.destroy()
 
 def test_is_counter_example():
     """Checking the counter example test 
     """
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("Mother"), ConceptExpression("Parent"), ConceptExpression("Person")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("Mother"), ConceptExpression("Parent"), ConceptExpression("Person")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
@@ -57,7 +66,7 @@ def test_is_counter_example():
 def test_right_saturation():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("Human"), ConceptExpression("Dog")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("Human"), ConceptExpression("Dog")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
@@ -75,7 +84,7 @@ def test_right_saturation():
 def test_right_decomposition():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("Woman"), ConceptExpression("Human")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("Woman"), ConceptExpression("Human")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
@@ -101,7 +110,7 @@ def test_right_decomposition():
 def test_left_saturation():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("Cat"), ConceptExpression("Human")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("Cat"), ConceptExpression("Human")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
@@ -123,7 +132,7 @@ def test_left_saturation():
 def test_left_decomposition():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("Cat"), ConceptExpression("Human")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("Cat"), ConceptExpression("Human")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
@@ -145,7 +154,7 @@ def test_left_decomposition():
 def test_sibling_merge():
     onto = owlready2.get_ontology("http://test-teacher.org/onto.owl")
     teacher_engine = OwlEngine(onto)
-    teacher = TestTeacher(teacher_engine, [ConceptExpression("Male"), ConceptExpression("Human")])
+    teacher = MockTeacher(teacher_engine, [ConceptExpression("Male"), ConceptExpression("Human")])
     
     onto = owlready2.get_ontology("http://test-learner.org/onto.owl")
     engine = OwlEngine(onto)
